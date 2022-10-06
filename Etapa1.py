@@ -1,12 +1,14 @@
 # %%
-import fractions
+from enum import unique
+from itertools import groupby
+from pydoc import describe
+from tokenize import group
+
+
 from itertools import count
 from statistics import geometric_mean
-from tkinter import LEFT
-from turtle import left
 import pandas as pd
 import numpy as np
-
 
 # %%
 resultados_paso = pd.read_csv(
@@ -42,7 +44,6 @@ comunas = pd.read_csv(
     quotechar='"',  # char para reconocer str
     encoding=None,
 )
-# print(comunas)
 comunas
 # %%
 circuito_comuna = comunas[["COMUNA", "CIRCUITO_N", "BARRIO"]].rename(
@@ -71,6 +72,8 @@ total_votos_x_comunas = (
     .sum()
 )
 total_votos_x_comunas
+total_votos_x_candidatos = total_votos_x_comunas.sum()
+total_votos_x_candidatos
 #%%
 total_votos_x_comunas = total_votos_x_comunas.assign(
     total_x_comuna=lambda x: (x["pp1"] + x["pp2"] + x["pp3"] + x["pp4"] + x["nv"])
@@ -138,6 +141,10 @@ hogarSUPREMO
 df100 = hogarSUPREMO.groupby(["COMUNA", "ALGUNBI"]).sum()
 df100
 # %%
-PersonaSUPREMO = pd.merge(hogarSUPREMO, persona, on="HOGAR_REF_ID", how="right")
-personaSUPREMO
+personaSUPREMO = pd.merge(hogarSUPREMO, persona, on="HOGAR_REF_ID", how="right")
+Votantes = personaSUPREMO[personaSUPREMO["P03"] >= 18]
+Votantes
+
+
+
 # %%

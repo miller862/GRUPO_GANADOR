@@ -1,10 +1,4 @@
 # %%
-from enum import unique
-from itertools import groupby
-from pydoc import describe
-from tokenize import group
-
-
 from itertools import count
 from statistics import geometric_mean
 import pandas as pd
@@ -44,6 +38,7 @@ comunas = pd.read_csv(
     quotechar='"',  # char para reconocer str
     encoding=None,
 )
+# print(comunas)
 comunas
 # %%
 circuito_comuna = comunas[["COMUNA", "CIRCUITO_N", "BARRIO"]].rename(
@@ -65,6 +60,7 @@ distrib_candidatos = (
     .transform(lambda x: (x + 0.0) / x.sum() * 100)
 )
 distrib_candidatos
+
 # %%
 total_votos_x_comunas = (
     tabla_final[["COMUNA", "pp1", "pp2", "pp3", "pp4", "nv", "BARRIO"]]
@@ -72,8 +68,6 @@ total_votos_x_comunas = (
     .sum()
 )
 total_votos_x_comunas
-total_votos_x_candidatos = total_votos_x_comunas.sum()
-total_votos_x_candidatos
 #%%
 total_votos_x_comunas = total_votos_x_comunas.assign(
     total_x_comuna=lambda x: (x["pp1"] + x["pp2"] + x["pp3"] + x["pp4"] + x["nv"])
@@ -87,7 +81,8 @@ porcentaje_votos_x_comunas = total_votos_x_comunas.transform(
 porcentaje_votos_x_comunas
 # %%
 porcentaje_orden = porcentaje_votos_x_comunas.sort_values(["pp3"], ascending=False)
-porcentaje_orden.style  # .background_gradient(cmap="viridis")
+porcentaje_orden
+
 
 # %%
 hogar = pd.read_csv("censo/hogar.csv", sep=",")
@@ -142,9 +137,261 @@ df100 = hogarSUPREMO.groupby(["COMUNA", "ALGUNBI"]).sum()
 df100
 # %%
 personaSUPREMO = pd.merge(hogarSUPREMO, persona, on="HOGAR_REF_ID", how="right")
-Votantes = personaSUPREMO[personaSUPREMO["P03"] >= 18]
-Votantes
+votantes = personaSUPREMO[personaSUPREMO["P03"] >= 18]
+votantes
+# %%
+#COMUNA 1
+is_comuna1 = votantes.loc[:,"COMUNA"] == 1
+comuna1 = votantes[is_comuna1]
+comuna1
+# %%
+#POBLACION COMUNA 1
+comuna1_poblacion = comuna1[["COMUNA", "P03", "P05", "P07", "P08", "P09", "CONDACT"]].copy()
+comuna1_poblacion
+# %%
+edad_c1 = comuna1_poblacion["P03"].describe()
+edad_c1
+# %%
+moda_educacion_c1 = comuna1_poblacion["P09"].mode()
+moda_educacion_c1
 
+# %%
+educacion_c1 = comuna1_poblacion.groupby(['P09']).count()
+educacion_c1
 
+#%%
+porcentaje_educacion_c1 = educacion_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_educacion_c1
 
+# %%
+descripcion_educacion_c1 = comuna1_poblacion["P09"].describe()
+descripcion_educacion_c1
+# %%
+moda_poblacion_actividad_c1 = comuna1_poblacion["CONDACT"].mode()
+moda_poblacion_actividad_c1
+# %%
+poblacion_actividad_c1 = comuna1_poblacion.groupby(['CONDACT']).count()
+poblacion_actividad_c1
+
+# %%
+porcentaje_actividad_c1 = poblacion_actividad_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_actividad_c1
+# %%
+#VIVIENDA COMUNA 1
+comuna1_vivienda = comuna1[["COMUNA", "TIPVV", "V01", "INMAT", "INCALSERV", "INCALCONS"]].copy()
+comuna1_vivienda
+# %%
+vivienda_agrupado_c1 = comuna1_vivienda["TIPVV"].mode()
+vivienda_agrupado_c1
+# %%
+tipo_vivienda_c1 = comuna1_vivienda["V01"].mode()
+tipo_vivienda_c1
+# %%
+cant_tipo_vivienda_c1 = comuna1_vivienda.groupby(['V01']).count()
+cant_tipo_vivienda_c1
+
+# %%
+porcentaje_tipo_vivienda_c1 = cant_tipo_vivienda_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_tipo_vivienda_c1
+# %%
+moda_calidad_materiales_c1 = comuna1_vivienda["INMAT"].mode()
+moda_calidad_materiales_c1
+# %%
+calidad_materiales_c1 = comuna1_vivienda.groupby(['INMAT']).count()
+calidad_materiales_c1
+
+# %%
+porcentaje_calidad_materiales_c1 = calidad_materiales_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_calidad_materiales_c1
+# %%
+calidad_serv_c1 = comuna1_vivienda.groupby(['INCALSERV']).count()
+calidad_serv_c1
+
+# %%
+porcentaje_calidad_serv_c1 = calidad_serv_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_calidad_serv_c1
+# %%
+calidad_cons_c1 = comuna1_vivienda.groupby(['INCALCONS']).count()
+calidad_cons_c1
+
+# %%
+porcentaje_calidad_cons_c1 = calidad_cons_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_calidad_cons_c1
+# %%
+#HOGAR COMUNA 1
+comuna1_hogar = comuna1[["COMUNA", "H05", "H06", "H07", "H08", "H09", "H10", "H13", "H16", "H19A", "H19B", "H19C", "PROP", "INDHAC"]].copy()
+comuna1_hogar
+# %%
+hogar_agua_c1 = comuna1_hogar.groupby(['H08']).count()
+hogar_agua_c1
+
+# %%
+porcentaje_agua_c1 = hogar_agua_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_agua_c1
+# %%
+hogar_bagno_c1 = comuna1_hogar.groupby(['H10']).count()
+hogar_bagno_c1
+
+# %%
+porcentaje_bagno_c1 = hogar_bagno_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_bagno_c1
+# %%
+hogar_bagno_ex_c1 = comuna1_hogar.groupby(['H13']).count()
+hogar_bagno_ex_c1
+
+# %%
+porcentaje_bagno_ex_c1 = hogar_bagno_ex_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_bagno_ex_c1
+# %%
+hogar_prop_c1 = comuna1_hogar.groupby(['PROP']).count()
+hogar_prop_c1
+
+# %%
+porcentaje_hogar_prop_c1 = hogar_prop_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_hogar_prop_c1
+# %%
+hogar_hac_c1 = comuna1_hogar.groupby(['INDHAC']).count()
+hogar_hac_c1
+
+# %%
+porcentaje_hogar_hac_c1 = hogar_hac_c1.transform(
+    (lambda x: (x + 0.0) / 168197 * 100), axis=1
+)
+porcentaje_hogar_hac_c1
+# %%
+#COMUNA 2
+is_comuna2 = votantes.loc[:,"COMUNA"] == 2
+comuna2 = votantes[is_comuna2]
+comuna2
+# %%
+#POBLACION COMUNA 2
+comuna2_poblacion = comuna2[["COMUNA", "P03", "P05", "P07", "P08", "P09", "CONDACT"]].copy()
+comuna2_poblacion
+# %%
+edad_c2 = comuna2_poblacion["P03"].describe()
+edad_c2
+# %%
+moda_educacion_c2 = comuna2_poblacion["P09"].mode()
+moda_educacion_c2
+# %%
+educacion_c2 = comuna2_poblacion.groupby(['P09']).count()
+educacion_c2
+
+# %%
+porcentaje_educacion_c2 = educacion_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_educacion_c2
+# %%
+poblacion_actividad_c2 = comuna2_poblacion.groupby(['CONDACT']).count()
+poblacion_actividad_c2
+
+# %%
+porcentaje_actividad_c2 = poblacion_actividad_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_actividad_c2
+# %%
+#VIVIENDA COMUNA 2
+comuna2_vivienda = comuna2[["COMUNA", "TIPVV", "V01", "INMAT", "INCALSERV", "INCALCONS"]].copy()
+comuna2_vivienda
+# %%
+cant_tipo_vivienda_c2 = comuna2_vivienda.groupby(['V01']).count()
+cant_tipo_vivienda_c2
+
+# %%
+porcentaje_tipo_vivienda_c2 = cant_tipo_vivienda_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_tipo_vivienda_c2
+# %%
+calidad_materiales_c2 = comuna2_vivienda.groupby(['INMAT']).count()
+calidad_materiales_c2
+
+# %%
+porcentaje_calidad_materiales_c2 = calidad_materiales_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_calidad_materiales_c2
+# %%
+calidad_serv_c2 = comuna2_vivienda.groupby(['INCALSERV']).count()
+calidad_serv_c2
+
+# %%
+porcentaje_calidad_serv_c2 = calidad_serv_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_calidad_serv_c2
+# %%
+calidad_cons_c2 = comuna2_vivienda.groupby(['INCALCONS']).count()
+calidad_cons_c2
+# %%
+porcentaje_calidad_cons_c2 = calidad_cons_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_calidad_cons_c2
+# %%
+#HOGAR COMUNA 2
+comuna2_hogar = comuna2[["COMUNA", "H05", "H06", "H07", "H08", "H09", "H10", "H13", "H16", "H19A", "H19B", "H19C", "PROP", "INDHAC"]].copy()
+comuna2_hogar
+# %%
+hogar_agua_c2 = comuna2_hogar.groupby(['H08']).count()
+hogar_agua_c2
+# %%
+porcentaje_agua_c2 = hogar_agua_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_agua_c2
+# %%
+hogar_bagno_c2 = comuna2_hogar.groupby(['H10']).count()
+hogar_bagno_c2
+# %%
+porcentaje_bagno_c2 = hogar_bagno_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_bagno_c2
+# %%
+hogar_bagno_ex_c2 = comuna2_hogar.groupby(['H13']).count()
+hogar_bagno_ex_c2
+# %%
+porcentaje_bagno_ex_c2 = hogar_bagno_ex_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_bagno_ex_c2
+# %%
+hogar_prop_c2 = comuna2_hogar.groupby(['PROP']).count()
+hogar_prop_c2
+# %%
+porcentaje_hogar_prop_c2 = hogar_prop_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_hogar_prop_c2
+# %%
+hogar_hac_c2 = comuna2_hogar.groupby(['INDHAC']).count()
+hogar_hac_c2
+# %%
+porcentaje_hogar_hac_c2 = hogar_hac_c2.transform(
+    (lambda x: (x + 0.0) / 136894 * 100), axis=1
+)
+porcentaje_hogar_hac_c2
 # %%

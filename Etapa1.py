@@ -3,6 +3,7 @@ from itertools import count
 from statistics import geometric_mean
 import pandas as pd
 import numpy as np
+import geopandas as gpd
 
 # %%
 resultados_paso = pd.read_csv(
@@ -40,6 +41,9 @@ comunas = pd.read_csv(
 )
 # print(comunas)
 comunas
+
+# %%
+
 # %%
 circuito_comuna = comunas[["COMUNA", "CIRCUITO_N", "BARRIO"]].rename(
     columns={"CIRCUITO_N": "circuito"}
@@ -52,6 +56,9 @@ tabla_final = pd.merge(
 )
 tabla_final
 # %%
+votos_x_circuito_comuna = tabla_final.groupby(["COMUNA", "circuito"]).sum()
+votos_x_circuito_comuna
+# %%
 # PORCENTAJE SOBRE EL PROPIO CANDIDATO
 distrib_candidatos = (
     tabla_final[["COMUNA", "pp1", "pp2", "pp3", "pp4", "nv", "BARRIO"]]
@@ -63,8 +70,8 @@ distrib_candidatos
 
 # %%
 total_votos_x_comunas = (
-    tabla_final[["COMUNA", "pp1", "pp2", "pp3", "pp4", "nv", "BARRIO"]]
-    .groupby(["COMUNA"])
+    tabla_final[["COMUNA", "circuito","pp1", "pp2", "pp3", "pp4", "nv", "BARRIO"]]
+    .groupby(["COMUNA", "circuito"])
     .sum()
 )
 total_votos_x_comunas
@@ -120,11 +127,7 @@ dpto_frac_radio_vivienda = pd.merge(
 )
 dpto_frac_radio_vivienda.rename(columns={"DPTO_REF_ID": "COMUNA"}, inplace=True)
 dpto_frac_radio_vivienda
-#%%
-# dpto_frac_radio_vivienda[dpto_frac_radio_vivienda.columns[[0,6,7,8,9,10,11,12,13,14,15,16,17]]]
-dpto_frac_radio_vivienda = dpto_frac_radio_vivienda[
-    dpto_frac_radio_vivienda.columns[[0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]]
-].copy()
+
 # %%
 dpto_frac_radio_vivienda
 # %%
@@ -840,4 +843,155 @@ porcentaje_hogar_hac_c6 = hogar_hac_c6.transform(
     (lambda x: (x + 0.0) / 146155 * 100), axis=1
 )
 porcentaje_hogar_hac_c6
+
+# %%
+#COMUNA 7
+is_comuna7 = votantes.loc[:,"COMUNA"] == 7
+comuna7 = votantes[is_comuna7]
+comuna7
+
+
+# %%
+#POBLACION COMUNA 7
+comuna7_poblacion = comuna7[["COMUNA", "P03", "P05", "P07", "P08", "P09", "CONDACT"]].copy()
+comuna7_poblacion
+# %%
+edad_c7 = comuna7_poblacion["P03"].describe()
+edad_c7
+# %%
+moda_educacion_c7 = comuna7_poblacion["P09"].mode()
+moda_educacion_c7
+# %%
+educacion_c7 = comuna7_poblacion.groupby(['P09']).count()
+educacion_c7
+# %%
+porcentaje_educacion_c7 = educacion_c7.transform(
+    (lambda x: (x + 0.0) / 171435  * 100), axis=1
+)
+porcentaje_educacion_c7
+#=======
+#>>>>>>> 3a673cef7eebaa4096e50edb4fe0473f5689813f
+# %%
+#GEOPANDAS
+censo = gpd.read_file("/Users/camilaherrero/Desktop/Candidato 3",
+    delimiter=',',       # delimitador ',',';','|','\t'
+    header=0,            # número de fila como nombre de columna
+    names=None,          # nombre de las columnas (ojo con header)
+    index_col=0,         # que col es el índice
+    usecols=None,        # que col usar. Ej: [0, 1, 2], ['foo', 'bar', 'baz']
+    dtype=None,          # Tipo de col {'a': np.int32, 'b': str} 
+    skiprows=None,       # saltear filas al inicio
+    skipfooter=0,        # saltear filas al final
+    nrows=None,          # n de filas a leer
+    decimal='.',         # separador de decimal. Ej: ',' para EU dat
+    quotechar='"',       # char para reconocer str
+    encoding=None,
+      )
+print(censo)
+# %%
+import matplotlib.pyplot as plt
+# %%
+porcentaje_votos_x_comunas.reset_index(inplace = True)
+#%%
+
+censo["circuito"]=censo["circuito"].apply(int)
+censo
+
+# %%
+censovotos= pd.merge(censo,porcentaje_votos_x_comunas, on="circuito", how="inner")
+censovotos=censovotos.sort_values("circuito")
+censovotos.reset_index(inplace=True)
+censovotos
+# %%
+censovotos= pd.merge(censo,porcentaje_votos_x_comunas, on="circuito", how="inner")
+censovotos=censovotos.sort_values("circuito")
+censovotos.reset_index(inplace=True)
+censovotos
+# %%
+censovotos.plot(column='pp3', scheme= "quantiles", figsize=(10, 10)) 
+# %%
+fig, ax = plt.subplots(figsize=(10, 10))
+ 
+# Control del título y los ejes
+ax.set_title('Porcentaje de votos del partido 3 por circuito electoral', 
+             pad = 20, 
+             fontdict={'fontsize':20, 'color': '#4873ab'})
+ax.set_xlabel('Longitud')
+ax.set_ylabel('Latitud')
+ 
+# Mostrar el mapa finalizado
+censovotos.plot(column='pp3', cmap='viridis',scheme='quantiles', ax=ax, zorder=5)
+# %%
+radios_shp = gpd.read_file("/Users/camilaherrero/Desktop/Candidato 3/CABA_radios.shx",
+    delimiter=',',       # delimitador ',',';','|','\t'
+    header=0,            # número de fila como nombre de columna
+    names=None,          # nombre de las columnas (ojo con header)
+    index_col=0,         # que col es el índice
+    usecols=None,        # que col usar. Ej: [0, 1, 2], ['foo', 'bar', 'baz']
+    dtype=None,          # Tipo de col {'a': np.int32, 'b': str} 
+    skiprows=None,       # saltear filas al inicio
+    skipfooter=0,        # saltear filas al final
+    nrows=None,          # n de filas a leer
+    decimal='.',         # separador de decimal. Ej: ',' para EU dat
+    quotechar='"',       # char para reconocer str
+    encoding=None,
+      )
+radios_shp
+# %%
+radios_shp.rename({"DPTO" : "COMUNA"}, axis = 1, inplace = True) #cambie el nombre de la columna dpto por comuna para poder hacer un merge con el df que veniamos trabajando
+radios_shp
+
+# %%
+radios_shp["COMUNA"] = radios_shp.COMUNA.str.strip("Comuna") #para sacarle la leyenda "Comuna" a la fila de comunas y que quede solo el numero
+radios_shp
+
+# %%
+radios_shp["COMUNA"] = radios_shp["COMUNA"].apply(int)
+radios_shp
+
+# %%
+votantes["PROV"] = 2
+votantes
+# %%
+votantes["COMUNA"] = votantes["COMUNA"].apply(str)
+votantes["COMUNA"]
+# %%
+votantes["IDFRAC"] = votantes["IDFRAC"].apply(str)
+# %%
+votantes["IDRADIO"] = votantes["IDRADIO"].apply(str)
+
+# %%
+votantes["PROV"] = votantes["PROV"].apply(str)
+# %%
+votantes["COMUNA"] = votantes["COMUNA"].str.pad(3, side = "left", fillchar ='0')
+votantes["COMUNA"]
+# %%
+votantes["IDFRAC"] = votantes["IDFRAC"].str.pad(2, side = "left", fillchar ='0')
+votantes["IDFRAC"]
+# %%
+votantes["IDRADIO"] = votantes["IDRADIO"].str.pad(2, side = "left", fillchar ='0')
+votantes["IDRADIO"]
+
+# %%
+votantes["PROV"] = votantes["PROV"].str.pad(2, side = "left", fillchar ='0')
+votantes["PROV"]
+# %%
+votantes["RADIO"] = votantes.PROV.str.cat(votantes.COMUNA)
+votantes
+# %%
+votantes["RADIO"] = votantes.RADIO.str.cat(votantes.IDFRAC)
+votantes
+# %%
+votantes["RADIO"] = votantes.RADIO.str.cat(votantes.IDRADIO)
+votantes
+# %%
+votantes_radio_agrup = votantes.groupby(["RADIO"]).sum()
+votantes_radio_agrup
+# %%
+votantes_radio_agrup.reset_index(inplace= True)
+votantes_radio_agrup
+
+# %%
+votantes_radio_shp = pd.merge(radios_shp,votantes_radio_agrup, on="RADIO", how="inner")
+votantes_radio_shp
 # %%
